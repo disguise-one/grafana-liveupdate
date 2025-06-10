@@ -11,9 +11,20 @@ export function QueryEditor({ query, onChange, onRunQuery }: Props) {
     onChange({ ...query, objectPath: event.target.value });
   };
 
-  const onPropertyPathsChange = (event: ChangeEvent<HTMLInputElement>) => {
-    // Comma-separated list to array
-    onChange({ ...query, propertyPaths: event.target.value.split(',').map(s => s.trim()) });
+  const onPropertyPathChange = (index: number, value: string) => {
+    const newPaths = [...(query.propertyPaths || [])];
+    newPaths[index] = value;
+    onChange({ ...query, propertyPaths: newPaths });
+  };
+
+  const addPropertyPath = () => {
+    onChange({ ...query, propertyPaths: [...(query.propertyPaths || []), ''] });
+  };
+
+  const removePropertyPath = (index: number) => {
+    const newPaths = [...(query.propertyPaths || [])];
+    newPaths.splice(index, 1);
+    onChange({ ...query, propertyPaths: newPaths });
   };
 
   const { objectPath, propertyPaths } = query;
@@ -29,14 +40,31 @@ export function QueryEditor({ query, onChange, onRunQuery }: Props) {
           placeholder="e.g. device.123"
         />
       </InlineField>
-      <InlineField label="Property Paths" tooltip="Comma-separated list of property paths">
-        <Input
-          id="query-editor-property-paths"
-          onChange={onPropertyPathsChange}
-          value={propertyPaths ? propertyPaths.join(', ') : ''}
-          required
-          placeholder="e.g. temperature, humidity"
-        />
+      <InlineField label="Property Paths" tooltip="Add each property path separately">
+        <Stack direction="column" gap={1}>
+          {(propertyPaths || []).map((path, idx) => (
+            <div key={idx} style={{ display: 'flex', alignItems: 'center', marginBottom: 4 }}>
+              <Input
+                id={`query-editor-property-path-${idx}`}
+                value={path}
+                onChange={e => onPropertyPathChange(idx, (e.target as HTMLInputElement).value)}
+                placeholder="e.g. temperature"
+                style={{ flex: 1 }}
+              />
+              <button
+                type="button"
+                style={{ marginLeft: 8 }}
+                onClick={() => removePropertyPath(idx)}
+                aria-label="Remove property"
+              >
+                −
+              </button>
+            </div>
+          ))}
+          <button type="button" onClick={addPropertyPath} style={{ marginTop: 4 }}>
+            + Add Property
+          </button>
+        </Stack>
       </InlineField>
     </Stack>
   );

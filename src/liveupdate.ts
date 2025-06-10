@@ -19,7 +19,7 @@ export type LiveUpdateOptions = {
 
 export class LiveUpdate {
   private ws?: WebSocket;
-  private status: string = 'CLOSED';
+  private status = 'CLOSED';
   private subscriptions: LiveUpdateSubscription[] = [];
   private keyToValue: Record<string, any> = {};
   private keyToId: Record<string, number> = {};
@@ -81,7 +81,7 @@ export class LiveUpdate {
       }
       // Remove unsubscribed keys
       Object.keys(this.keyToValue).forEach((key) => {
-        if (!this.keyToId[key]) delete this.keyToValue[key];
+        if (!this.keyToId[key]) { delete this.keyToValue[key]; }
       });
     }
     if (parsed.valuesChanged) {
@@ -106,7 +106,7 @@ export class LiveUpdate {
     }
   }
 
-  public setValues(newValues: { id: number; value: any }[]) {
+  public setValues(newValues: Array<{ id: number; value: any }>) {
     if (newValues.length > 0) {
       this.send({ set: newValues });
     }
