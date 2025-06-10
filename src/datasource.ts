@@ -1,4 +1,3 @@
-import { getBackendSrv } from '@grafana/runtime';
 import {
   CoreApp,
   CircularDataFrame,
@@ -12,7 +11,7 @@ import {
 
 import { LiveUpdateQuery, LiveUpdateDataSourceOptions } from './types';
 import { LiveUpdate } from './liveupdate';
-import { lastValueFrom, Observable } from 'rxjs';
+import { Observable } from 'rxjs';
 
 export class DataSource extends DataSourceApi<LiveUpdateQuery, LiveUpdateDataSourceOptions> {
   private liveUpdate: LiveUpdate;
@@ -31,55 +30,98 @@ export class DataSource extends DataSourceApi<LiveUpdateQuery, LiveUpdateDataSou
       onError: (err) => console.error('LiveUpdate error:', err),
       onValuesChanged: this.handleLiveUpdate.bind(this),
     });
-    // Always run the refresh interval to monitor connection state and data freshness
-    this.refreshInterval = setInterval(() => {
-      const isOpen = this.liveUpdate.getStatus() === 'OPEN';
-      const now = Date.now();
-      for (const subs of this.querySubscribers.values()) {
-        for (const { query, frame, subscriber } of subs) {
-          if (!isOpen) {
-            // Insert empty row if not connected
-            const row: Record<string, any> = { time: now };
-            for (const property of query.propertyPaths) {
-              row[property] = null;
-            }
-            frame.add(row);
-            subscriber.next({ data: [frame], key: query.refId, state: LoadingState.Streaming });
-            continue;
-          }
-          // If connected, check if data has been received recently by looking at last frame timestamp
-          if (frame.length > 0) {
-            const lastTime = frame.fields.find(f => f.name === 'time')?.values[frame.length - 1] as number;
-            if (now - lastTime > 200) {
-              // Duplicate last row if available
-              const lastRow: Record<string, any> = {};
-              frame.fields.forEach((field) => {
-                lastRow[field.name] = field.values[frame.length - 1];
-              });
-              const row: Record<string, any> = { ...lastRow, time: now };
-              frame.add(row);
-              subscriber.next({ data: [frame], key: query.refId, state: LoadingState.Streaming });
-            }
+    this.refreshInterval = setInterval(this.handleRefreshInterval.bind(this), 200);
+  }
+
+  // Helper to handle the refresh interval logic
+  private handleRefreshInterval() {
+    const isOpen = this.liveUpdate.getStatus() === 'OPEN';
+    const now = Date.now();
+    for (const subs of this.querySubscribers.values()) {
+      for (const { query, frame, subscriber } of subs) {
+        if (!isOpen) {
+          this.insertEmptyRow(frame, query, now, subscriber);
+          continue;
+        }
+        if (frame.length > 0) {
+          const lastTime = frame.fields.find(f => f.name === 'time')?.values[frame.length - 1] as number;
+          if (now - lastTime > 200) {
+            this.duplicateLastRow(frame, now, query, subscriber);
           }
         }
       }
-      // If not open and there are active queries, start/maintain reconnect interval
-      if (!isOpen && [...this.querySubscribers.values()].flat().length > 0) {
-        if (!this.reconnectInterval) {
-          this.reconnectInterval = setInterval(() => {
-            if (this.liveUpdate.getStatus() !== 'OPEN') {
-              this.liveUpdate.reconnect();
-            } else if (this.reconnectInterval) {
-              clearInterval(this.reconnectInterval);
-              this.reconnectInterval = undefined;
-            }
-          }, 2000); // Longer timeout for reconnect attempts
-        }
-      } else if (isOpen && this.reconnectInterval) {
-        clearInterval(this.reconnectInterval);
-        this.reconnectInterval = undefined;
+    }
+    this.handleReconnectInterval(isOpen);
+  }
+
+  // Helper to insert an empty row
+  private insertEmptyRow(frame: CircularDataFrame, query: LiveUpdateQuery, now: number, subscriber: any) {
+    const row: Record<string, any> = { time: now };
+    for (const property of query.propertyPaths) {
+      row[property] = null;
+    }
+    frame.add(row);
+    subscriber.next({ data: [frame], key: query.refId, state: LoadingState.Streaming });
+  }
+
+  // Helper to duplicate the last row
+  private duplicateLastRow(frame: CircularDataFrame, now: number, query: LiveUpdateQuery, subscriber: any) {
+    const lastRow: Record<string, any> = {};
+    frame.fields.forEach((field) => {
+      lastRow[field.name] = field.values[frame.length - 1];
+    });
+    const row: Record<string, any> = { ...lastRow, time: now };
+    frame.add(row);
+    subscriber.next({ data: [frame], key: query.refId, state: LoadingState.Streaming });
+  }
+
+  // Helper to handle the reconnect interval logic
+  private handleReconnectInterval(isOpen: boolean) {
+    if (!isOpen && [...this.querySubscribers.values()].flat().length > 0) {
+      if (!this.reconnectInterval) {
+        this.reconnectInterval = setInterval(() => {
+          if (this.liveUpdate.getStatus() !== 'OPEN') {
+            this.liveUpdate.reconnect();
+          } else if (this.reconnectInterval) {
+            clearInterval(this.reconnectInterval);
+            this.reconnectInterval = undefined;
+          }
+        }, 2000);
       }
-    }, 200);
+    } else if (isOpen && this.reconnectInterval) {
+      clearInterval(this.reconnectInterval);
+      this.reconnectInterval = undefined;
+    }
+  }
+
+  // Helper to add fields to the frame based on the first received value, including arrays
+  private addFieldsFromValue(frame: CircularDataFrame, value: any, prefix = '') {
+    if (value === null || value === undefined) {
+      return;
+    }
+    if (Array.isArray(value)) {
+      // For arrays, add a field for the array length and for each index up to the first value's length
+      if (!frame.fields.some(f => f.name === `${prefix}.length`)) {
+        frame.addField({ name: `${prefix}.length`, type: FieldType.number });
+      }
+      // Optionally, flatten the first element for structure
+      if (value.length > 0) {
+        this.addFieldsFromValue(frame, value[0], `${prefix}[0]`);
+      }
+    } else if (typeof value === 'object') {
+      for (const [key, val] of Object.entries(value)) {
+        this.addFieldsFromValue(frame, val, prefix ? `${prefix}.${key}` : key);
+      }
+    } else {
+      // Add a field for this value if it doesn't exist
+      const fieldName = prefix;
+      if (!frame.fields.some(f => f.name === fieldName)) {
+        let type: any = FieldType.string;
+        if (typeof value === 'number') { type = FieldType.number; }
+        else if (typeof value === 'boolean') { type = FieldType.boolean; }
+        frame.addField({ name: fieldName, type });
+      }
+    }
   }
 
   private handleLiveUpdate(changes: Record<string, any>) {
@@ -92,15 +134,35 @@ export class DataSource extends DataSourceApi<LiveUpdateQuery, LiveUpdateDataSou
           const k = `${query.objectPath}/${property}`;
           if (k in changes) {
             hasChange = true;
+            // Dynamically add fields based on the value structure
+            this.addFieldsFromValue(frame, changes[k], property);
           }
-          row[property] = this.liveUpdate.getValue(k);
+          // Recursively flatten the value for the row
+          this.flattenValueForRow(row, changes[k], property);
         }
         if (hasChange) {
           frame.add(row);
           subscriber.next({ data: [frame], key: query.refId, state: LoadingState.Streaming });
-          // No need to update lastDataReceived, handled by frame
         }
       }
+    }
+  }
+
+  // Helper to flatten a value into the row object for the frame, including arrays
+  private flattenValueForRow(row: Record<string, any>, value: any, prefix: string) {
+    if (value === null || value === undefined) {
+      row[prefix] = value;
+    } else if (Array.isArray(value)) {
+      row[`${prefix}.length`] = value.length;
+      if (value.length > 0) {
+        this.flattenValueForRow(row, value[0], `${prefix}[0]`);
+      }
+    } else if (typeof value === 'object') {
+      for (const [key, val] of Object.entries(value)) {
+        this.flattenValueForRow(row, val, `${prefix}.${key}`);
+      }
+    } else {
+      row[prefix] = value;
     }
   }
 
@@ -116,25 +178,19 @@ export class DataSource extends DataSourceApi<LiveUpdateQuery, LiveUpdateDataSou
     const observables = options.targets.map((target) => {
       const query = target;
       return new Observable<DataQueryResponse>((subscriber) => {
-        // Subscribe to the requested object and properties
         this.liveUpdate.subscribe(query.objectPath, query.propertyPaths);
         const frame = new CircularDataFrame({ append: 'tail', capacity: 1000 });
         frame.refId = query.refId;
         frame.addField({ name: 'time', type: FieldType.time });
-        query.propertyPaths.forEach((property) => {
-          frame.addField({ name: property, type: FieldType.number });
-        });
-        // Register this query's subscriber
+        // Do not pre-add property fields; add them dynamically on first value
         const key = `${query.objectPath}|${query.propertyPaths.join(',')}`;
         if (!this.querySubscribers.has(key)) {
           this.querySubscribers.set(key, []);
         }
         this.querySubscribers.get(key)!.push({ query, frame, subscriber });
-        // Cleanup on unsubscribe
         return () => {
           const keys = query.propertyPaths.map((p) => `${query.objectPath}/${p}`);
           this.liveUpdate.unsubscribe(keys);
-          // Remove this subscriber
           const arr = this.querySubscribers.get(key);
           if (arr) {
             this.querySubscribers.set(key, arr.filter((item) => item.subscriber !== subscriber));
@@ -146,13 +202,6 @@ export class DataSource extends DataSourceApi<LiveUpdateQuery, LiveUpdateDataSou
       });
     });
     return observables.length === 1 ? observables[0] : (Observable as any).merge(...observables);
-  }
-
-  async request(url: string, params?: string) {
-    const response = getBackendSrv().fetch({
-      url: `${this.baseUrl}${url}${params?.length ? `?${params}` : ''}`,
-    });
-    return lastValueFrom(response);
   }
 
   /**
