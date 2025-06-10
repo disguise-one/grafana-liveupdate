@@ -38,7 +38,7 @@ export function QueryEditor({ query, onChange, onRunQuery }: Props) {
           onChange={onObjectPathChange}
           value={objectPath || ''}
           required
-          placeholder="e.g. device.123"
+          placeholder='e.g. screen2:"surface 1"'
           className="liveupdate-fullwidth-input"
         />
       </InlineField>
@@ -50,7 +50,7 @@ export function QueryEditor({ query, onChange, onRunQuery }: Props) {
                 id={`query-editor-property-path-${idx}`}
                 value={path}
                 onChange={e => onPropertyPathChange(idx, (e.target as HTMLInputElement).value)}
-                placeholder="e.g. temperature"
+                placeholder="e.g. object.offset"
                 className="liveupdate-fullwidth-input"
               />
               <button

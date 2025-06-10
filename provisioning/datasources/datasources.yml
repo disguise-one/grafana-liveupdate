@@ -9,6 +9,5 @@ datasources:
     version: 1
     editable: true
     jsonData:
-      path: '/resources'
-    secureJsonData:
-      apiKey: 'api-key'
+      host: 'director'
+      port: 80
