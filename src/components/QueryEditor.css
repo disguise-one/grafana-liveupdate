@@ -1,0 +1,7 @@
+.liveupdate-fullwidth-input {
+  min-width: 320px !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  flex: 1 1 0 !important;
+  box-sizing: border-box;
+}

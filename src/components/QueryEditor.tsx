@@ -3,6 +3,7 @@ import { InlineField, Input, Stack } from '@grafana/ui';
 import { QueryEditorProps } from '@grafana/data';
 import { DataSource } from '../datasource';
 import { LiveUpdateDataSourceOptions, LiveUpdateQuery } from '../types';
+import './QueryEditor.css';
 
 type Props = QueryEditorProps<DataSource, LiveUpdateQuery, LiveUpdateDataSourceOptions>;
 
@@ -30,26 +31,27 @@ export function QueryEditor({ query, onChange, onRunQuery }: Props) {
   const { objectPath, propertyPaths } = query;
 
   return (
-    <Stack gap={0}>
-      <InlineField label="Object Path" tooltip="The object path to subscribe to">
+    <Stack gap={2} direction="column">
+      <InlineField label="Object Path" tooltip="The object path to subscribe to" grow>
         <Input
           id="query-editor-object-path"
           onChange={onObjectPathChange}
           value={objectPath || ''}
           required
           placeholder="e.g. device.123"
+          className="liveupdate-fullwidth-input"
         />
       </InlineField>
-      <InlineField label="Property Paths" tooltip="Add each property path separately">
+      <InlineField label="Property Paths" tooltip="Add each property path separately" grow>
         <Stack direction="column" gap={1}>
           {(propertyPaths || []).map((path, idx) => (
-            <div key={idx} style={{ display: 'flex', alignItems: 'center', marginBottom: 4 }}>
+            <div key={idx} style={{ display: 'flex', alignItems: 'center', marginBottom: 4, width: '100%' }}>
               <Input
                 id={`query-editor-property-path-${idx}`}
                 value={path}
                 onChange={e => onPropertyPathChange(idx, (e.target as HTMLInputElement).value)}
                 placeholder="e.g. temperature"
-                style={{ flex: 1 }}
+                className="liveupdate-fullwidth-input"
               />
               <button
                 type="button"
