@@ -1,0 +1,25 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "shell",
+			"label": "Dev Plugin",
+			"command": "npm",
+			"args": ["run", "dev"],
+			"group": "build",
+			"isBackground": true,
+			"problemMatcher": ["$tsc"]
+		},
+		{
+			"type": "shell",
+			"label": "Docker Test Environment",
+			"command": "docker",
+			"args": [
+				"compose",
+				"up"
+			],
+			"group": "build",
+			"isBackground": true
+		}
+	]
+}
