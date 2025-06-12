@@ -6,44 +6,13 @@ This repository contains a Grafana data source plugin that connects to the [Disg
 
 This plugin allows Grafana to subscribe to live updates from a Disguise Designer project using the LiveUpdate WebSocket API. It supports complex, nested, and array-based data structures, and provides robust connection and reconnection logic. The plugin is frontend-only and does not require a backend proxy or REST API.
 
-## About the Disguise LiveUpdate API
-
-The [LiveUpdate API](https://developer.disguise.one/api/session/liveupdate/) is a WebSocket-based protocol for subscribing to and updating properties of objects in a Disguise Designer project. Key features:
-
-- **Realtime Subscriptions:** Subscribe to updates on specific resources using Designer expression syntax for objects and Python expressions for properties.
-- **Dynamic Data Changes:** Issue commands to modify resource properties (where supported).
-- **Partial Updates:** Supports partial modifications and merging of new fields with existing data.
-- **Efficient Subscription Model:** Each (object, property) pair is assigned a unique integer ID for efficient updates.
-
-**Example usage:**
-```js
-// Open a live update websocket connection
-const socket = new WebSocket('ws://director:80/api/session/liveupdate');
-
-// Subscribe to a Track resource
-socket.onopen = () => {
-    const subscribeMessage = { subscribe: {
-        object: "track:track_1",
-        properties: ["object.lengthInBeats", "object.layers"]
-    } };
-    socket.send(JSON.stringify(subscribeMessage));
-};
-
-// Listen for incoming updates
-socket.onmessage = (event) => {
-    const data = JSON.parse(event.data);
-    console.log('Update received:', data);
-};
-```
-
-See the [LiveUpdate API documentation](https://developer.disguise.one/api/session/liveupdate/) for full protocol details, message formats, and advanced usage. The API is a core part of Disguise Designer and is used for real-time integration with project data.
-
 ## Plugin Structure
 
 - **src/datasource.ts**: Implements the main `DataSource` class, which manages queries, data frames, and the connection to the LiveUpdate backend. It dynamically creates fields in the data frame based on the structure of incoming data and manages query subscriptions, refresh intervals, and reconnection logic.
 - **src/liveupdate.ts**: Contains the [`LiveUpdate` class](https://developer.disguise.one/api/session/liveupdate/) that encapsulates all WebSocket connection logic. It manages subscriptions, handles incoming messages, maintains the current connection status, and provides methods for subscribing/unsubscribing to object/property paths. The class implements the full LiveUpdate protocol, including subscribe, unsubscribe, set, and error handling.
 - **src/components/QueryEditor.tsx**: Provides the UI for building queries in Grafana, allowing users to specify object paths and property paths to subscribe to.
 - **src/components/QueryEditor.css**: Custom styles for the query editor UI.
+- **src/components/ConfigEditor.tsx**: Implements the configuration UI for the plugin, allowing users to set the LiveUpdate server host and port in the Grafana data source settings.
 
 ## How It Works
 
@@ -111,6 +80,38 @@ The [`LiveUpdate` class](https://developer.disguise.one/api/session/liveupdate/)
 - Handles reconnection and status changes.
 - Notifies the datasource of value changes for real-time updates.
 - Implements the full message protocol: `subscribe`, `unsubscribe`, `set`, and error handling.
+
+### About the Disguise LiveUpdate API
+
+The [LiveUpdate API](https://developer.disguise.one/api/session/liveupdate/) is a WebSocket-based protocol for subscribing to and updating properties of objects in a Disguise Designer project. Key features:
+
+- **Realtime Subscriptions:** Subscribe to updates on specific resources using Designer expression syntax for objects and Python expressions for properties.
+- **Dynamic Data Changes:** Issue commands to modify resource properties (where supported).
+- **Partial Updates:** Supports partial modifications and merging of new fields with existing data.
+- **Efficient Subscription Model:** Each (object, property) pair is assigned a unique integer ID for efficient updates.
+
+**Example usage:**
+```js
+// Open a live update websocket connection
+const socket = new WebSocket('ws://director:80/api/session/liveupdate');
+
+// Subscribe to a Track resource
+socket.onopen = () => {
+    const subscribeMessage = { subscribe: {
+        object: "track:track_1",
+        properties: ["object.lengthInBeats", "object.layers"]
+    } };
+    socket.send(JSON.stringify(subscribeMessage));
+};
+
+// Listen for incoming updates
+socket.onmessage = (event) => {
+    const data = JSON.parse(event.data);
+    console.log('Update received:', data);
+};
+```
+
+See the [LiveUpdate API documentation](https://developer.disguise.one/api/session/liveupdate/) for full protocol details, message formats, and advanced usage. The API is a core part of Disguise Designer and is used for real-time integration with project data.
 
 ## Contributing
 

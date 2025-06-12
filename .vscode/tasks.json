@@ -4,8 +4,12 @@
 		{
 			"type": "shell",
 			"label": "Dev Plugin",
-			"command": "npm",
-			"args": ["run", "dev"],
+			"command": "bash",
+			"args": [
+				"-i",
+				"-c",
+				"nvm exec npm run dev"
+			],
 			"group": "build",
 			"isBackground": true,
 			"problemMatcher": ["$tsc"]

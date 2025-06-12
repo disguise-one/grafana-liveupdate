@@ -6,8 +6,8 @@
       "type": "node",
       "request": "launch",
       "name": "Debug Dev Plugin (npm run dev)",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev"],
+      "runtimeExecutable": "bash",
+      "runtimeArgs": ["-i", "-c", "nvm exec npm run dev"],
       "skipFiles": ["<node_internals>/**"],
       "console": "integratedTerminal"
     }
