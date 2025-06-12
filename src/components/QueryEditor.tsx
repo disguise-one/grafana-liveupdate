@@ -12,23 +12,23 @@ export function QueryEditor({ query, onChange, onRunQuery }: Props) {
     onChange({ ...query, objectPath: event.target.value });
   };
 
-  const onPropertyPathChange = (index: number, value: string) => {
-    const newPaths = [...(query.propertyPaths || [])];
-    newPaths[index] = value;
-    onChange({ ...query, propertyPaths: newPaths });
+  const onPropertyChange = (index: number, field: 'path' | 'name', value: string) => {
+    const newProperties = [...(query.properties || [])];
+    newProperties[index] = { ...newProperties[index], [field]: value };
+    onChange({ ...query, properties: newProperties });
   };
 
-  const addPropertyPath = () => {
-    onChange({ ...query, propertyPaths: [...(query.propertyPaths || []), ''] });
+  const addProperty = () => {
+    onChange({ ...query, properties: [...(query.properties || []), { path: '', name: '' }] });
   };
 
-  const removePropertyPath = (index: number) => {
-    const newPaths = [...(query.propertyPaths || [])];
-    newPaths.splice(index, 1);
-    onChange({ ...query, propertyPaths: newPaths });
+  const removeProperty = (index: number) => {
+    const newProperties = [...(query.properties || [])];
+    newProperties.splice(index, 1);
+    onChange({ ...query, properties: newProperties });
   };
 
-  const { objectPath, propertyPaths } = query;
+  const { objectPath, properties } = query;
 
   return (
     <Stack gap={2} direction="column">
@@ -42,28 +42,36 @@ export function QueryEditor({ query, onChange, onRunQuery }: Props) {
           className="liveupdate-fullwidth-input"
         />
       </InlineField>
-      <InlineField label="Property Paths" tooltip="Add each property path separately" grow>
+      <InlineField label="Property Paths" tooltip="Add each property name and path separately" grow>
         <Stack direction="column" gap={1}>
-          {(propertyPaths || []).map((path, idx) => (
+          {(properties || []).map((prop, idx) => (
             <div key={idx} style={{ display: 'flex', alignItems: 'center', marginBottom: 4, width: '100%' }}>
               <Input
+                id={`query-editor-property-name-${idx}`}
+                value={prop.name}
+                onChange={e => onPropertyChange(idx, 'name', (e.target as HTMLInputElement).value)}
+                placeholder="Series name (optional)"
+                className="liveupdate-property-name-input"
+              />
+              <Input
                 id={`query-editor-property-path-${idx}`}
-                value={path}
-                onChange={e => onPropertyPathChange(idx, (e.target as HTMLInputElement).value)}
+                value={prop.path}
+                onChange={e => onPropertyChange(idx, 'path', (e.target as HTMLInputElement).value)}
                 placeholder="e.g. object.offset"
                 className="liveupdate-fullwidth-input"
+                style={{ flex: 1, marginRight: 8 }}
               />
               <button
                 type="button"
                 style={{ marginLeft: 8 }}
-                onClick={() => removePropertyPath(idx)}
+                onClick={() => removeProperty(idx)}
                 aria-label="Remove property"
               >
                 −
               </button>
             </div>
           ))}
-          <button type="button" onClick={addPropertyPath} style={{ marginTop: 4 }}>
+          <button type="button" onClick={addProperty} style={{ marginTop: 4 }}>
             + Add Property
           </button>
         </Stack>

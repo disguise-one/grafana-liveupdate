@@ -57,8 +57,8 @@ export class DataSource extends DataSourceApi<LiveUpdateQuery, LiveUpdateDataSou
   // Helper to insert an empty row
   private insertEmptyRow(frame: CircularDataFrame, query: LiveUpdateQuery, now: number, subscriber: any) {
     const row: Record<string, any> = { time: now };
-    for (const property of query.propertyPaths) {
-      row[property] = null;
+    for (const property of query.properties) {
+      row[property.name || property.path] = null;
     }
     frame.add(row);
     subscriber.next({ data: [frame], key: query.refId, state: LoadingState.Streaming });
@@ -130,15 +130,13 @@ export class DataSource extends DataSourceApi<LiveUpdateQuery, LiveUpdateDataSou
       for (const { query, frame, subscriber } of subs) {
         const row: Record<string, any> = { time: now };
         let hasChange = false;
-        for (const property of query.propertyPaths) {
-          const k = `${query.objectPath}/${property}`;
+        for (const property of query.properties) {
+          const k = `${query.objectPath}/${property.path}`;
           if (k in changes) {
             hasChange = true;
-            // Dynamically add fields based on the value structure
-            this.addFieldsFromValue(frame, changes[k], property);
+            this.addFieldsFromValue(frame, changes[k], property.name || property.path);
           }
-          // Recursively flatten the value for the row
-          this.flattenValueForRow(row, changes[k], property);
+          this.flattenValueForRow(row, changes[k], property.name || property.path);
         }
         if (hasChange) {
           frame.add(row);
@@ -167,29 +165,29 @@ export class DataSource extends DataSourceApi<LiveUpdateQuery, LiveUpdateDataSou
   }
 
   getDefaultQuery(_: CoreApp): Partial<LiveUpdateQuery> {
-    return { refId: '', objectPath: '', propertyPaths: [] };
+    return { refId: '', objectPath: '', properties: [] };
   }
 
   filterQuery(query: LiveUpdateQuery): boolean {
-    return !!query.objectPath && Array.isArray(query.propertyPaths) && query.propertyPaths.length > 0;
+    return !!query.objectPath && Array.isArray(query.properties) && query.properties.length > 0;
   }
 
   query(options: DataQueryRequest<LiveUpdateQuery>): Observable<DataQueryResponse> {
     const observables = options.targets.map((target) => {
       const query = target;
       return new Observable<DataQueryResponse>((subscriber) => {
-        this.liveUpdate.subscribe(query.objectPath, query.propertyPaths);
+        this.liveUpdate.subscribe(query.objectPath, query.properties.map(p => p.path));
         const frame = new CircularDataFrame({ append: 'tail', capacity: 1000 });
         frame.refId = query.refId;
         frame.addField({ name: 'time', type: FieldType.time });
         // Do not pre-add property fields; add them dynamically on first value
-        const key = `${query.objectPath}|${query.propertyPaths.join(',')}`;
+        const key = `${query.objectPath}|${query.properties.map(p => p.path).join(',')}`;
         if (!this.querySubscribers.has(key)) {
           this.querySubscribers.set(key, []);
         }
         this.querySubscribers.get(key)!.push({ query, frame, subscriber });
         return () => {
-          const keys = query.propertyPaths.map((p) => `${query.objectPath}/${p}`);
+          const keys = query.properties.map((p) => `${query.objectPath}/${p.path}`);
           this.liveUpdate.unsubscribe(keys);
           const arr = this.querySubscribers.get(key);
           if (arr) {

@@ -7,9 +7,16 @@ export interface LiveUpdateDataSourceOptions extends DataSourceJsonData {
   port: number;
 }
 
+export interface LiveUpdateProperty {
+  /** The property path to subscribe to */
+  path: string;
+  /** The name to use for this property (series name) */
+  name: string;
+}
+
 export interface LiveUpdateQuery extends DataQuery {
   /** The object path to subscribe to */
   objectPath: string;
-  /** List of property paths to subscribe to */
-  propertyPaths: string[];
+  /** List of property path/name pairs to subscribe to */
+  properties: LiveUpdateProperty[];
 }
