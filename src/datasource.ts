@@ -100,13 +100,9 @@ export class DataSource extends DataSourceApi<LiveUpdateQuery, LiveUpdateDataSou
       return;
     }
     if (Array.isArray(value)) {
-      // For arrays, add a field for the array length and for each index up to the first value's length
-      if (!frame.fields.some(f => f.name === `${prefix}.length`)) {
-        frame.addField({ name: `${prefix}.length`, type: FieldType.number });
-      }
-      // Optionally, flatten the first element for structure
-      if (value.length > 0) {
-        this.addFieldsFromValue(frame, value[0], `${prefix}[0]`);
+      // For arrays, flatten all elements
+      for (let i = 0; i < value.length; i++) {
+        this.addFieldsFromValue(frame, value[i], `${prefix}[${i}]`);
       }
     } else if (typeof value === 'object') {
       for (const [key, val] of Object.entries(value)) {
@@ -151,9 +147,9 @@ export class DataSource extends DataSourceApi<LiveUpdateQuery, LiveUpdateDataSou
     if (value === null || value === undefined) {
       row[prefix] = value;
     } else if (Array.isArray(value)) {
-      row[`${prefix}.length`] = value.length;
-      if (value.length > 0) {
-        this.flattenValueForRow(row, value[0], `${prefix}[0]`);
+      // Flatten all elements of the array
+      for (let i = 0; i < value.length; i++) {
+        this.flattenValueForRow(row, value[i], `${prefix}[${i}]`);
       }
     } else if (typeof value === 'object') {
       for (const [key, val] of Object.entries(value)) {
