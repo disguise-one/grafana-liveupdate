@@ -39,14 +39,10 @@ export class DataSource extends DataSourceApi<LiveUpdateQuery, LiveUpdateDataSou
     const now = Date.now();
     for (const subs of this.querySubscribers.values()) {
       for (const { query, frame, subscriber } of subs) {
-        if (!isOpen) {
-          this.insertEmptyRow(frame, query, now, subscriber);
-          continue;
-        }
         if (frame.length > 0) {
           const lastTime = frame.fields.find(f => f.name === 'time')?.values[frame.length - 1] as number;
           if (now - lastTime > 200) {
-            this.duplicateLastRow(frame, now, query, subscriber);
+            this.addRowOrUpdateTimestamp(frame, now, query, subscriber, isOpen);
           }
         }
       }
@@ -54,24 +50,39 @@ export class DataSource extends DataSourceApi<LiveUpdateQuery, LiveUpdateDataSou
     this.handleReconnectInterval(isOpen);
   }
 
-  // Helper to insert an empty row
-  private insertEmptyRow(frame: CircularDataFrame, query: LiveUpdateQuery, now: number, subscriber: any) {
-    const row: Record<string, any> = { time: now };
-    for (const property of query.properties) {
-      row[property.name || property.path] = null;
+  // Helper to add a row: duplicate last row or insert nulls, or just update timestamp if last two rows are identical (excluding 'time')
+  private addRowOrUpdateTimestamp(frame: CircularDataFrame, now: number, query: LiveUpdateQuery, subscriber: any, isOpen: boolean) {
+    if (frame.length > 1) {
+      let allMatch = true;
+      for (const field of frame.fields) {
+        if (field.name === 'time') { continue; }
+        const lastVal = field.values[frame.length - 1];
+        const prevVal = field.values[frame.length - 2];
+        if (lastVal !== prevVal || (!isOpen && lastVal !== null)) {
+          allMatch = false;
+          break;
+        }
+      }
+      if (allMatch) {
+        // Only update the timestamp of the most recent value
+        const timeField = frame.fields.find(f => f.name === 'time');
+        if (timeField) {
+          timeField.values[frame.length - 1] = now;
+          subscriber.next({ data: [frame], key: query.refId, state: LoadingState.Streaming });
+        }
+        return;
+      }
     }
-    frame.add(row);
-    subscriber.next({ data: [frame], key: query.refId, state: LoadingState.Streaming });
-  }
 
-  // Helper to duplicate the last row
-  private duplicateLastRow(frame: CircularDataFrame, now: number, query: LiveUpdateQuery, subscriber: any) {
-    const lastRow: Record<string, any> = {};
-    frame.fields.forEach((field) => {
-      lastRow[field.name] = field.values[frame.length - 1];
-    });
-    const row: Record<string, any> = { ...lastRow, time: now };
-    frame.add(row);
+    if (frame.length > 0) {
+      // Duplicate the last row
+      const lastRow: Record<string, any> = {};
+      frame.fields.forEach((field) => {
+        lastRow[field.name] = isOpen ? field.values[frame.length - 1] : null;
+      });
+      const row: Record<string, any> = { ...lastRow, time: now };
+      frame.add(row);
+    }
     subscriber.next({ data: [frame], key: query.refId, state: LoadingState.Streaming });
   }
 
