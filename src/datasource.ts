@@ -184,7 +184,7 @@ export class DataSource extends DataSourceApi<LiveUpdateQuery, LiveUpdateDataSou
       const query = target;
       return new Observable<DataQueryResponse>((subscriber) => {
         this.liveUpdate.subscribe(query.objectPath, query.properties.map(p => p.path));
-        const frame = new CircularDataFrame({ append: 'tail', capacity: 1000 });
+        const frame = new CircularDataFrame({ append: 'tail', capacity: 99999 });
         frame.refId = query.refId;
         frame.addField({ name: 'time', type: FieldType.time });
         // Do not pre-add property fields; add them dynamically on first value

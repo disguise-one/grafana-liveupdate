@@ -4,7 +4,8 @@ services:
     container_name: 'disguiseone-liveupdate-datasource'
 
     build:
-      context: .
+      context: ..
+      dockerfile: .config/Dockerfile
       args:
         grafana_image: ${GRAFANA_IMAGE:-grafana-enterprise}
         grafana_version: ${GRAFANA_VERSION:-11.5.3}
@@ -13,6 +14,7 @@ services:
     ports:
       - 3000:3000/tcp
     volumes:
+      - grafana_data:/var/lib/grafana
       - ../dist:/var/lib/grafana/plugins/disguiseone-liveupdate-datasource
       - ../provisioning:/etc/grafana/provisioning
       - ..:/root/disguiseone-liveupdate-datasource

@@ -40,8 +40,8 @@ RUN if [ "${development}" = "true" ]; then \
     fi \
     fi
 
-COPY supervisord/supervisord.conf /etc/supervisor.d/supervisord.ini
-COPY supervisord/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+COPY .config/supervisord/supervisord.conf /etc/supervisor.d/supervisord.ini
+COPY .config/supervisord/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 
 
@@ -49,6 +49,6 @@ COPY supervisord/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 RUN sed -i 's|</body>|<script src="http://localhost:35729/livereload.js"></script></body>|g' /usr/share/grafana/public/views/index.html
 
 
-COPY entrypoint.sh /entrypoint.sh
+COPY .config/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]
