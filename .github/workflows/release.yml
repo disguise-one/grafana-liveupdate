@@ -37,22 +37,16 @@ jobs:
       - name: Package release
         run: |
           RELEASE_DIR="release"
-          mkdir -p "${RELEASE_DIR}/.config"
           mkdir -p "${RELEASE_DIR}/provisioning"
 
           # Copy necessary files, preserving structure
           cp -r dist "${RELEASE_DIR}/"
           cp -r provisioning/dashboards "${RELEASE_DIR}/provisioning/"
           cp -r provisioning/datasources "${RELEASE_DIR}/provisioning/"
-          cp docker-compose.yaml "${RELEASE_DIR}/"
-          cp .config/Dockerfile "${RELEASE_DIR}/.config/"
-
-          # Adjust docker-compose-base.yaml for release and copy it
-          sed -e 's|context: ..|context: .|' \
-              -e 's|- ../dist|- ./dist|' \
-              -e 's|- ../provisioning|- ./provisioning|' \
-              -e '/- ..:\/root\/disguiseone-liveupdate-datasource/d' \
-              .config/docker-compose-base.yaml > "${RELEASE_DIR}/.config/docker-compose-base.yaml"
+          cp .config/Dockerfile "${RELEASE_DIR}/Dockerfile"
+          cp docker-compose.release.yaml "${RELEASE_DIR}/docker-compose.yaml"
+          cp README.md "${RELEASE_DIR}/"
+          cp DEVELOPER.md "${RELEASE_DIR}/"
 
           # Create the zip file
           cd "${RELEASE_DIR}"
