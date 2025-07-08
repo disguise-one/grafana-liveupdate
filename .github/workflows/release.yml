@@ -58,6 +58,7 @@ jobs:
           cp -r provisioning/dashboards release/provisioning/
           cp -r provisioning/datasources release/provisioning/
           cp docker-compose.release.yaml release/docker-compose.yaml
+          cp .config/Dockerfile release/Dockerfile
           cp start-grafana.bat release/start-grafana.bat
           cp advertiser/plugin_advertiser.exe release/advertiser/plugin_advertiser.exe
           cp README.md release/
