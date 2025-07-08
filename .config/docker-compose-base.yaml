@@ -12,7 +12,7 @@ services:
         development: ${DEVELOPMENT:-false}
         anonymous_auth_enabled: ${ANONYMOUS_AUTH_ENABLED:-true}
     ports:
-      - 3000:3000/tcp
+      - 3030:3000/tcp
     volumes:
       - grafana_data:/var/lib/grafana
       - ../dist:/var/lib/grafana/plugins/disguiseone-liveupdate-datasource
@@ -21,7 +21,9 @@ services:
 
     environment:
       NODE_ENV: development
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /etc/grafana/provisioning/dashboards/live-dashboard.json
       GF_LOG_FILTERS: plugin.disguiseone-liveupdate-datasource:debug
       GF_LOG_LEVEL: info
       GF_DATAPROXY_LOGGING: 1
       GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS: disguiseone-liveupdate-datasource
+      GF_AUTH_DISABLE_LOGIN_FORM: 'true'

@@ -19,6 +19,7 @@ export class DataSource extends DataSourceApi<LiveUpdateQuery, LiveUpdateDataSou
   baseUrl: string;
   private refreshInterval: NodeJS.Timeout;
   private reconnectInterval?: NodeJS.Timeout;
+  private connectionPromise: Promise<void> | null = null;
 
   constructor(instanceSettings: DataSourceInstanceSettings<LiveUpdateDataSourceOptions>) {
     super(instanceSettings);
@@ -31,6 +32,25 @@ export class DataSource extends DataSourceApi<LiveUpdateQuery, LiveUpdateDataSou
       onValuesChanged: this.handleLiveUpdate.bind(this),
     });
     this.refreshInterval = setInterval(this.handleRefreshInterval.bind(this), 200);
+  }
+
+  private ensureConnected(): Promise<void> {
+    if (this.connectionPromise) {
+      return this.connectionPromise;
+    }
+
+    this.connectionPromise = new Promise(async (resolve) => {
+      const timeoutMs = 5000;
+      const pollInterval = 100;
+      let waited = 0;
+      while (this.liveUpdate.getStatus() !== 'OPEN' && waited < timeoutMs) {
+        await new Promise(r => setTimeout(r, pollInterval));
+        waited += pollInterval;
+      }
+      resolve();
+    });
+
+    return this.connectionPromise;
   }
 
   // Helper to handle the refresh interval logic
@@ -183,16 +203,20 @@ export class DataSource extends DataSourceApi<LiveUpdateQuery, LiveUpdateDataSou
     const observables = options.targets.map((target) => {
       const query = target;
       return new Observable<DataQueryResponse>((subscriber) => {
-        this.liveUpdate.subscribe(query.objectPath, query.properties.map(p => p.path));
-        const frame = new CircularDataFrame({ append: 'tail', capacity: 99999 });
-        frame.refId = query.refId;
-        frame.addField({ name: 'time', type: FieldType.time });
-        // Do not pre-add property fields; add them dynamically on first value
         const key = `${query.objectPath}|${query.properties.map(p => p.path).join(',')}`;
-        if (!this.querySubscribers.has(key)) {
-          this.querySubscribers.set(key, []);
-        }
-        this.querySubscribers.get(key)!.push({ query, frame, subscriber });
+        (async () => {
+          await this.ensureConnected();
+          this.liveUpdate.subscribe(query.objectPath, query.properties.map(p => p.path));
+          const frame = new CircularDataFrame({ append: 'tail', capacity: 99999 });
+          frame.refId = query.refId;
+          frame.addField({ name: 'time', type: FieldType.time });
+          // Do not pre-add property fields; add them dynamically on first value
+          if (!this.querySubscribers.has(key)) {
+            this.querySubscribers.set(key, []);
+          }
+          this.querySubscribers.get(key)!.push({ query, frame, subscriber });
+        })();
+
         return () => {
           const keys = query.properties.map((p) => `${query.objectPath}/${p.path}`);
           this.liveUpdate.unsubscribe(keys);

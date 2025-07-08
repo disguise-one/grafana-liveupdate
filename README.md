@@ -57,7 +57,9 @@ This plugin allows Grafana to subscribe to live updates from a Disguise Designer
    # or specify a version
    GRAFANA_VERSION=11.3.0 npm run server
    ```
-   
+
+   Once running, Grafana will be available at `http://localhost:3030`.
+
    **Note:** The `server` command will resume existing containers. Use `npm run server:build` to rebuild the Docker image when needed (e.g., after Dockerfile changes).
 
 6. **Run E2E tests (Playwright)**
