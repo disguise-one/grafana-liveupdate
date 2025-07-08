@@ -59,7 +59,7 @@ jobs:
           cp -r provisioning/datasources release/provisioning/
           cp docker-compose.release.yaml release/docker-compose.yaml
           cp start-grafana.bat release/start-grafana.bat
-          cp dist_advertiser/plugin_advertiser.exe release/advertiser/plugin_advertiser.exe
+          cp advertiser/plugin_advertiser.exe release/advertiser/plugin_advertiser.exe
           cp README.md release/
           cp DEVELOPER.md release/
           Compress-Archive -Path release/* -DestinationPath "disguiseone-liveupdate-datasource-${{ github.ref_name }}.zip"
