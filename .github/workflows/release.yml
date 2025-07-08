@@ -6,8 +6,7 @@ on:
   push:
     tags:
       - 'v*.*.*'
-    branches:
-      - 'fix/docker-persistence-and-buffer'
+      - 'v*.*.*-beta*'
 
 jobs:
   build-and-release:
@@ -34,7 +33,16 @@ jobs:
         id: sanitize_ref
         run: echo "ref_name_sanitized=$(echo ${{ github.ref_name }} | sed 's/\//-/g')" >> $GITHUB_OUTPUT
 
-      - name: Assemble release files
+      - name: Check if this is a pre-release
+        id: check_prerelease
+        run: |
+          if [[ "${{ github.ref_name }}" == *"-beta"* ]]; then
+            echo "is_prerelease=true" >> $GITHUB_OUTPUT
+          else
+            echo "is_prerelease=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Package release
         run: |
           RELEASE_DIR="release"
           mkdir -p "${RELEASE_DIR}/provisioning"
@@ -53,22 +61,13 @@ jobs:
           cp docker-compose.release.yaml "${RELEASE_DIR}/docker-compose.yaml"
           cp README.md "${RELEASE_DIR}/"
           cp DEVELOPER.md "${RELEASE_DIR}/"
-        
-      - name: Upload artifact for testing
-        if: startsWith(github.ref, 'refs/heads/')
-        uses: actions/upload-artifact@v4
-        with:
-          name: disguiseone-liveupdate-datasource-${{ steps.sanitize_ref.outputs.ref_name_sanitized }}
-          path: release/
 
-      - name: Package release for tag
-        if: startsWith(github.ref, 'refs/tags/')
-        run: |
-          cd release
+          # Create the zip file
+          cd "${RELEASE_DIR}"
           zip -r "../disguiseone-liveupdate-datasource-${{ steps.sanitize_ref.outputs.ref_name_sanitized }}.zip" .
-
+        
       - name: Create GitHub Release
-        if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
           files: 'disguiseone-liveupdate-datasource-${{ steps.sanitize_ref.outputs.ref_name_sanitized }}.zip'
+          prerelease: ${{ steps.check_prerelease.outputs.is_prerelease }}
