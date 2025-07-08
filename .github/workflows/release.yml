@@ -64,7 +64,8 @@ jobs:
             Set-Content release\Dockerfile
           
           # Copy other necessary files to the root of the release dir
-          cp .\.config\entrypoint.sh release\entrypoint.sh
+          # Convert line endings to Unix format for entrypoint.sh
+          (Get-Content .\.config\entrypoint.sh -Raw) -replace "`r`n", "`n" | Set-Content release\entrypoint.sh -NoNewline
           cp .\.config\supervisord\supervisord.conf release\supervisord.conf
           cp .\src\img\designer.svg release\icon.svg
 
