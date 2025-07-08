@@ -54,11 +54,25 @@ jobs:
           mkdir release
           mkdir release/advertiser
           mkdir release/provisioning
+
+          # Modify Dockerfile for release and copy to release dir
+          # This removes all relative source paths from the COPY commands
+          (Get-Content .\.config\Dockerfile) | 
+            ForEach-Object { $_ -replace '\.config/supervisord/supervisord\.conf', 'supervisord.conf' } |
+            ForEach-Object { $_ -replace '\.config/entrypoint\.sh', 'entrypoint.sh' } |
+            ForEach-Object { $_ -replace 'src/img/designer\.svg', 'icon.svg' } |
+            Set-Content release\Dockerfile
+          
+          # Copy other necessary files to the root of the release dir
+          cp .\.config\entrypoint.sh release\entrypoint.sh
+          cp .\.config\supervisord\supervisord.conf release\supervisord.conf
+          cp .\src\img\designer.svg release\icon.svg
+
+          # Copy the rest of the release files
           cp -r dist release/
           cp -r provisioning/dashboards release/provisioning/
           cp -r provisioning/datasources release/provisioning/
           cp docker-compose.release.yaml release/docker-compose.yaml
-          cp .config/Dockerfile release/Dockerfile
           cp start-grafana.bat release/start-grafana.bat
           cp advertiser/plugin_advertiser.exe release/advertiser/plugin_advertiser.exe
           cp README.md release/
