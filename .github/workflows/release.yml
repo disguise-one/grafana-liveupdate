@@ -10,7 +10,7 @@ on:
 
 jobs:
   build-and-release:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     permissions:
       contents: write
     steps:
@@ -21,53 +21,52 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: 'npm'
 
-      - name: Install dependencies
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Node.js dependencies
         run: npm ci
 
-      - name: Build plugin
+      - name: Install Python dependencies
+        run: pip install pyinstaller git+https://github.com/disguise-one/python-plugin
+
+      - name: Build Grafana Plugin
         run: npm run build
 
-      - name: Sanitize ref name for filename
-        id: sanitize_ref
-        run: echo "ref_name_sanitized=$(echo ${{ github.ref_name }} | sed 's/\//-/g')" >> $GITHUB_OUTPUT
-
+      - name: Build Python Advertiser EXE
+        run: python build.py
+      
       - name: Check if this is a pre-release
         id: check_prerelease
         run: |
-          if [[ "${{ github.ref_name }}" == *"-beta"* ]]; then
-            echo "is_prerelease=true" >> $GITHUB_OUTPUT
-          else
-            echo "is_prerelease=false" >> $GITHUB_OUTPUT
-          fi
+          if ("${{ github.ref_name }}".Contains("-beta")) {
+            "is_prerelease=true" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          } else {
+            "is_prerelease=false" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          }
+        shell: pwsh
 
       - name: Package release
         run: |
-          RELEASE_DIR="release"
-          mkdir -p "${RELEASE_DIR}/provisioning"
+          mkdir release
+          mkdir release/advertiser
+          mkdir release/provisioning
+          cp -r dist release/
+          cp -r provisioning/dashboards release/provisioning/
+          cp -r provisioning/datasources release/provisioning/
+          cp docker-compose.release.yaml release/docker-compose.yaml
+          cp start-grafana.bat release/start-grafana.bat
+          cp dist_advertiser/plugin_advertiser.exe release/advertiser/plugin_advertiser.exe
+          cp README.md release/
+          cp DEVELOPER.md release/
+          Compress-Archive -Path release/* -DestinationPath "disguiseone-liveupdate-datasource-${{ github.ref_name }}.zip"
+        shell: pwsh
 
-          # Modify Dockerfile for release and copy to release dir
-          sed -e 's|COPY .config/supervisord/supervisord.conf|COPY supervisord.conf|g' \
-              -e 's|COPY .config/entrypoint.sh|COPY entrypoint.sh|g' \
-              .config/Dockerfile > "${RELEASE_DIR}/Dockerfile"
-
-          # Copy other necessary files to the root of the release dir
-          cp .config/entrypoint.sh "${RELEASE_DIR}/entrypoint.sh"
-          cp .config/supervisord/supervisord.conf "${RELEASE_DIR}/supervisord.conf"
-          cp -r dist "${RELEASE_DIR}/"
-          cp -r provisioning/dashboards "${RELEASE_DIR}/provisioning/"
-          cp -r provisioning/datasources "${RELEASE_DIR}/provisioning/"
-          cp docker-compose.release.yaml "${RELEASE_DIR}/docker-compose.yaml"
-          cp README.md "${RELEASE_DIR}/"
-          cp DEVELOPER.md "${RELEASE_DIR}/"
-
-          # Create the zip file
-          cd "${RELEASE_DIR}"
-          zip -r "../disguiseone-liveupdate-datasource-${{ steps.sanitize_ref.outputs.ref_name_sanitized }}.zip" .
-        
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: 'disguiseone-liveupdate-datasource-${{ steps.sanitize_ref.outputs.ref_name_sanitized }}.zip'
+          files: "disguiseone-liveupdate-datasource-${{ github.ref_name }}.zip"
           prerelease: ${{ steps.check_prerelease.outputs.is_prerelease }}

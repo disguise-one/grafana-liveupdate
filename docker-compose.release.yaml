@@ -23,7 +23,7 @@ services:
       GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /etc/grafana/provisioning/dashboards/live-dashboard.json
       GF_LOG_FILTERS: plugin.disguiseone-liveupdate-datasource:debug
       GF_LOG_LEVEL: info
-      GF_DATAPXY_LOGGING: 1
+      GF_DATAPROXY_LOGGING: 1
       GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS: disguiseone-liveupdate-datasource
       GF_AUTH_DISABLE_LOGIN_FORM: 'true'
 

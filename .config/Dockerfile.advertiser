@@ -1,0 +1,14 @@
+FROM python:3.12-slim
+
+WORKDIR /app
+
+# Install git to be able to pip install from git
+RUN apt-get update && apt-get install -y git && rm -rf /var/lib/apt/lists/*
+
+# Install python dependency
+RUN pip install "git+https://github.com/disguise-one/python-plugin"
+
+COPY ../d3plugin.json .
+COPY ../run_plugin_advertiser.py .
+
+CMD ["python", "run_plugin_advertiser.py"] 
