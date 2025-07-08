@@ -38,15 +38,18 @@ jobs:
         run: |
           RELEASE_DIR="release"
           mkdir -p "${RELEASE_DIR}/provisioning"
-          mkdir -p "${RELEASE_DIR}/.config/supervisord"
 
-          # Copy necessary files, preserving structure
+          # Modify Dockerfile for release and copy to release dir
+          sed -e 's|COPY .config/supervisord/supervisord.conf|COPY supervisord.conf|g' \
+              -e 's|COPY .config/entrypoint.sh|COPY entrypoint.sh|g' \
+              .config/Dockerfile > "${RELEASE_DIR}/Dockerfile"
+
+          # Copy other necessary files to the root of the release dir
+          cp .config/entrypoint.sh "${RELEASE_DIR}/entrypoint.sh"
+          cp .config/supervisord/supervisord.conf "${RELEASE_DIR}/supervisord.conf"
           cp -r dist "${RELEASE_DIR}/"
           cp -r provisioning/dashboards "${RELEASE_DIR}/provisioning/"
           cp -r provisioning/datasources "${RELEASE_DIR}/provisioning/"
-          cp .config/Dockerfile "${RELEASE_DIR}/.config/Dockerfile"
-          cp .config/entrypoint.sh "${RELEASE_DIR}/.config/entrypoint.sh"
-          cp .config/supervisord/supervisord.conf "${RELEASE_DIR}/.config/supervisord/supervisord.conf"
           cp docker-compose.release.yaml "${RELEASE_DIR}/docker-compose.yaml"
           cp README.md "${RELEASE_DIR}/"
           cp DEVELOPER.md "${RELEASE_DIR}/"
