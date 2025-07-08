@@ -39,8 +39,8 @@ RUN if [ "${development}" = "true" ]; then \
     echo 'ERROR: Unsupported base image' && /bin/false; \
     fi \
     fi
-    COPY .config/supervisord/supervisord.conf /etc/supervisor.d/supervisord.ini
-    COPY .config/supervisord/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+    COPY supervisord.conf /etc/supervisor.d/supervisord.ini
+    COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 # Inject Disguise plugin meta headers
 RUN sed -i 's|</head>|    <meta name="disguise-plugin-window-size" content="600,300">\n    <meta name="disguise-plugin-window-min-size" content="200,200">\n    <meta name="disguise-plugin-window-resizable" content="true">\n</head>|' /usr/share/grafana/public/views/index.html
@@ -49,8 +49,8 @@ RUN sed -i 's|</head>|    <meta name="disguise-plugin-window-size" content="600,
 RUN sed -i 's|</body>|<script src="http://localhost:35729/livereload.js"></script></body>|g' /usr/share/grafana/public/views/index.html
 
 # Copy icon to be served by Grafana
-COPY src/img/designer.svg /usr/share/grafana/public/img/icon.svg
+COPY icon.svg /usr/share/grafana/public/img/icon.svg
 
-COPY .config/entrypoint.sh /entrypoint.sh
+COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]
