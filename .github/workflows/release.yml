@@ -34,7 +34,7 @@ jobs:
         id: sanitize_ref
         run: echo "ref_name_sanitized=$(echo ${{ github.ref_name }} | sed 's/\//-/g')" >> $GITHUB_OUTPUT
 
-      - name: Package release
+      - name: Assemble release files
         run: |
           RELEASE_DIR="release"
           mkdir -p "${RELEASE_DIR}/provisioning"
@@ -47,17 +47,19 @@ jobs:
           cp docker-compose.release.yaml "${RELEASE_DIR}/docker-compose.yaml"
           cp README.md "${RELEASE_DIR}/"
           cp DEVELOPER.md "${RELEASE_DIR}/"
-
-          # Create the zip file
-          cd "${RELEASE_DIR}"
-          zip -r "../disguiseone-liveupdate-datasource-${{ steps.sanitize_ref.outputs.ref_name_sanitized }}.zip" .
         
       - name: Upload artifact for testing
         if: startsWith(github.ref, 'refs/heads/')
         uses: actions/upload-artifact@v4
         with:
           name: disguiseone-liveupdate-datasource-${{ steps.sanitize_ref.outputs.ref_name_sanitized }}
-          path: disguiseone-liveupdate-datasource-${{ steps.sanitize_ref.outputs.ref_name_sanitized }}.zip
+          path: release/
+
+      - name: Package release for tag
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          cd release
+          zip -r "../disguiseone-liveupdate-datasource-${{ steps.sanitize_ref.outputs.ref_name_sanitized }}.zip" .
 
       - name: Create GitHub Release
         if: startsWith(github.ref, 'refs/tags/')
