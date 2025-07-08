@@ -207,7 +207,7 @@ export class DataSource extends DataSourceApi<LiveUpdateQuery, LiveUpdateDataSou
         (async () => {
           await this.ensureConnected();
           this.liveUpdate.subscribe(query.objectPath, query.properties.map(p => p.path));
-          const frame = new CircularDataFrame({ append: 'tail', capacity: 99999 });
+          const frame = new CircularDataFrame({ append: 'tail', capacity: 5000 });
           frame.refId = query.refId;
           frame.addField({ name: 'time', type: FieldType.time });
           // Do not pre-add property fields; add them dynamically on first value
