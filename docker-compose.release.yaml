@@ -4,8 +4,8 @@ services:
     container_name: 'disguiseone-liveupdate-datasource'
 
     build:
-      context: ..
-      dockerfile: .config/Dockerfile
+      context: .
+      dockerfile: Dockerfile
       args:
         grafana_image: ${GRAFANA_IMAGE:-grafana-enterprise}
         grafana_version: ${GRAFANA_VERSION:-11.5.3}
@@ -15,9 +15,8 @@ services:
       - 3030:3000/tcp
     volumes:
       - grafana_data:/var/lib/grafana
-      - ../dist:/var/lib/grafana/plugins/disguiseone-liveupdate-datasource
-      - ../provisioning:/etc/grafana/provisioning
-      - ..:/root/disguiseone-liveupdate-datasource
+      - ./dist:/var/lib/grafana/plugins/disguiseone-liveupdate-datasource
+      - ./provisioning:/etc/grafana/provisioning
 
     environment:
       NODE_ENV: development
@@ -27,3 +26,6 @@ services:
       GF_DATAPROXY_LOGGING: 1
       GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS: disguiseone-liveupdate-datasource
       GF_AUTH_DISABLE_LOGIN_FORM: 'true'
+
+volumes:
+  grafana_data: 

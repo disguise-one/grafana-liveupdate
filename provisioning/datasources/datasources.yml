@@ -3,11 +3,12 @@ apiVersion: 1
 datasources:
   - name: 'liveupdate'
     type: 'disguiseone-liveupdate-datasource'
+    uid: 'disguise-liveupdate-datasource'
     access: proxy
     isDefault: false
     orgId: 1
     version: 1
     editable: true
     jsonData:
-      host: 'director'
+      host: '127.0.0.1'
       port: 80

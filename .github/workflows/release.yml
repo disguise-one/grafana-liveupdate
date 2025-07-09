@@ -1,26 +1,88 @@
 # This GitHub Action automates the process of building Grafana plugins.
 # (For more information, see https://github.com/grafana/plugin-actions/blob/main/build-plugin/README.md)
-name: Release
+name: Release Plugin
 
 on:
   push:
     tags:
-      - 'v*' # Run workflow on version tags, e.g. v1.0.0.
-
-permissions: read-all
+      - 'v*.*.*'
+      - 'v*.*.*-beta*'
 
 jobs:
-  release:
+  build-and-release:
+    runs-on: windows-latest
     permissions:
       contents: write
-    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: grafana/plugin-actions/build-plugin@main
-        # Uncomment to enable plugin signing
-        # (For more info on how to generate the access policy token see https://grafana.com/developers/plugin-tools/publish-a-plugin/sign-a-plugin#generate-an-access-policy-token)
-        #with:
-        # Make sure to save the token in your repository secrets
-        #policy_token: $
-        # Usage of GRAFANA_API_KEY is deprecated, prefer `policy_token` option above
-        #grafana_token: $
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Node.js dependencies
+        run: npm ci
+
+      - name: Install Python dependencies
+        run: pip install pyinstaller git+https://github.com/disguise-one/python-plugin
+
+      - name: Build Grafana Plugin
+        run: npm run build
+
+      - name: Build Python Advertiser EXE
+        run: python build.py
+      
+      - name: Check if this is a pre-release
+        id: check_prerelease
+        run: |
+          if ("${{ github.ref_name }}".Contains("-beta")) {
+            "is_prerelease=true" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          } else {
+            "is_prerelease=false" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          }
+        shell: pwsh
+
+      - name: Package release
+        run: |
+          mkdir release
+          mkdir release/advertiser
+          mkdir release/provisioning
+
+          # Modify Dockerfile for release and copy to release dir
+          # This removes all relative source paths from the COPY commands
+          (Get-Content .\.config\Dockerfile) | 
+            ForEach-Object { $_ -replace '\.config/supervisord/supervisord\.conf', 'supervisord.conf' } |
+            ForEach-Object { $_ -replace '\.config/entrypoint\.sh', 'entrypoint.sh' } |
+            ForEach-Object { $_ -replace 'src/img/designer\.svg', 'icon.svg' } |
+            Set-Content release\Dockerfile
+          
+          # Copy other necessary files to the root of the release dir
+          # Convert line endings to Unix format for entrypoint.sh
+          (Get-Content .\.config\entrypoint.sh -Raw) -replace "`r`n", "`n" | Set-Content release\entrypoint.sh -NoNewline
+          cp .\.config\supervisord\supervisord.conf release\supervisord.conf
+          cp .\src\img\designer.svg release\icon.svg
+
+          # Copy the rest of the release files
+          cp -r dist release/
+          cp -r provisioning/dashboards release/provisioning/
+          cp -r provisioning/datasources release/provisioning/
+          cp docker-compose.release.yaml release/docker-compose.yaml
+          cp start-grafana.bat release/start-grafana.bat
+          cp advertiser/plugin_advertiser.exe release/advertiser/plugin_advertiser.exe
+          cp README.md release/
+          cp DEVELOPER.md release/
+          Compress-Archive -Path release/* -DestinationPath "disguiseone-liveupdate-datasource-${{ github.ref_name }}.zip"
+        shell: pwsh
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: "disguiseone-liveupdate-datasource-${{ github.ref_name }}.zip"
+          prerelease: ${{ steps.check_prerelease.outputs.is_prerelease }}

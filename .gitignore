@@ -44,3 +44,9 @@ ci/
 .idea
 
 .eslintcache
+
+# PyInstaller build artifacts
+/build/
+/dist_advertiser/
+/advertiser/
+*.spec

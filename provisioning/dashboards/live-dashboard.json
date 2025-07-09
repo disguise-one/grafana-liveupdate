@@ -1,0 +1,564 @@
+{
+  "__inputs": [
+    {
+      "name": "DS_LIVEUPDATE",
+      "label": "liveupdate",
+      "description": "",
+      "type": "datasource",
+      "pluginId": "disguiseone-liveupdate-datasource",
+      "pluginName": "Disguise Live Update"
+    }
+  ],
+  "__elements": {},
+  "__requires": [
+    {
+      "type": "datasource",
+      "id": "disguiseone-liveupdate-datasource",
+      "name": "Disguise Live Update",
+      "version": "1.0.0"
+    },
+    {
+      "type": "grafana",
+      "id": "grafana",
+      "name": "Grafana",
+      "version": "11.5.3"
+    },
+    {
+      "type": "panel",
+      "id": "text",
+      "name": "Text",
+      "version": ""
+    },
+    {
+      "type": "panel",
+      "id": "timeseries",
+      "name": "Time series",
+      "version": ""
+    }
+  ],
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 6,
+      "panels": [],
+      "title": "Dashboard",
+      "type": "row"
+    },
+    {
+      "gridPos": {
+        "h": 4,
+        "w": 24,
+        "x": 0,
+        "y": 1
+      },
+      "id": 5,
+      "options": {
+        "code": {
+          "language": "plaintext",
+          "showLineNumbers": false,
+          "showMiniMap": false
+        },
+        "content": "# Disguise LiveUpdate Dashboard\n\nWelcome to the Disguise LiveUpdate Dashboard. This dashboard has been set up with some basic monitors - for more advanced monitoring, see the LiveUpdate documentation on [http://developer.disguise.one](developer.disguise.one)",
+        "mode": "markdown"
+      },
+      "pluginVersion": "11.5.3",
+      "title": "Welcome",
+      "type": "text"
+    },
+    {
+      "datasource": {
+        "type": "disguiseone-liveupdate-datasource",
+        "uid": "disguise-liveupdate-datasource"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "rothz"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 5
+      },
+      "id": 1,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.5.3",
+      "targets": [
+        {
+          "datasource": {
+            "type": "disguiseone-liveupdate-datasource",
+            "uid": "disguise-liveupdate-datasource"
+          },
+          "objectPath": "subsystem:MonitoringManager.findLocalMonitor(\"fps\")",
+          "properties": [
+            {
+              "name": "FPS",
+              "path": "object.seriesAverage(\"Actual\", 1)"
+            },
+            {
+              "name": "Average FPS",
+              "path": "object.seriesAverage(\"Actual\", 60)"
+            }
+          ],
+          "refId": "A"
+        }
+      ],
+      "title": "FPS",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "disguiseone-liveupdate-datasource",
+        "uid": "disguise-liveupdate-datasource"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 17
+              }
+            ]
+          },
+          "unit": "ms"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 5
+      },
+      "id": 3,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.5.3",
+      "targets": [
+        {
+          "datasource": {
+            "type": "disguiseone-liveupdate-datasource",
+            "uid": "disguise-liveupdate-datasource"
+          },
+          "objectPath": "subsystem:MonitoringManager.findLocalMonitor(\"GPUProfiler\")",
+          "properties": [
+            {
+              "name": "Video Upload",
+              "path": "object.seriesAverage(\"Video Upload\", 1)"
+            },
+            {
+              "name": "Capture Upload",
+              "path": "object.seriesAverage(\"Capture Upload\", 1)"
+            },
+            {
+              "name": "Compositor",
+              "path": "object.seriesAverage(\"Compositor\", 1)"
+            },
+            {
+              "name": "GUI",
+              "path": "object.seriesAverage(\"GUI\", 1)"
+            },
+            {
+              "name": "Render Everything",
+              "path": "object.seriesAverage(\"Render Everything\", 1)"
+            },
+            {
+              "name": "DMX",
+              "path": "object.seriesAverage(\"DMX\", 1)"
+            },
+            {
+              "name": "Total",
+              "path": "object.seriesAverage(\"Total\", 1)"
+            }
+          ],
+          "refId": "A"
+        }
+      ],
+      "title": "GPUProfiler",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "disguiseone-liveupdate-datasource",
+        "uid": "disguise-liveupdate-datasource"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 13
+      },
+      "id": 2,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.5.3",
+      "targets": [
+        {
+          "datasource": {
+            "type": "disguiseone-liveupdate-datasource",
+            "uid": "disguise-liveupdate-datasource"
+          },
+          "objectPath": "subsystem:MonitoringManager.findLocalMonitor(\"Machine\")",
+          "properties": [
+            {
+              "name": "CPU Time",
+              "path": "object.seriesAverage(\"CPU Time\", 1)"
+            },
+            {
+              "name": "GPU Time",
+              "path": "object.seriesAverage(\"GPU Time\", 1)"
+            },
+            {
+              "name": "CPU Memory",
+              "path": "object.seriesAverage(\"CPU Memory\", 1)"
+            },
+            {
+              "name": "GPU Memory",
+              "path": "object.seriesAverage(\"GPU Memory\", 1)"
+            },
+            {
+              "name": "Disk",
+              "path": "object.seriesAverage(\"Disk\", 1)"
+            }
+          ],
+          "refId": "A"
+        }
+      ],
+      "title": "Machine",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "disguiseone-liveupdate-datasource",
+        "uid": "disguise-liveupdate-datasource"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "MBs"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 13
+      },
+      "id": 4,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.5.3",
+      "targets": [
+        {
+          "datasource": {
+            "type": "disguiseone-liveupdate-datasource",
+            "uid": "disguise-liveupdate-datasource"
+          },
+          "objectPath": "subsystem:MonitoringManager.findLocalMonitor(\"Disk\")",
+          "properties": [
+            {
+              "name": "Read",
+              "path": "object.seriesAverage(\"Read (MB/s)\", 1)"
+            },
+            {
+              "name": "Write",
+              "path": "object.seriesAverage(\"Write (MB/s)\", 1)"
+            }
+          ],
+          "refId": "A"
+        }
+      ],
+      "title": "Disk",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "",
+  "schemaVersion": 40,
+  "tags": [],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-1m",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "Disguise Dashboard",
+  "uid": "ber7x05lbu48we",
+  "version": 2,
+  "weekStart": ""
+} 
