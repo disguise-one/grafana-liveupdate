@@ -6,5 +6,6 @@ if __name__ == '__main__':
         'run_plugin_advertiser.py',
         '--onefile',
         '--name', 'plugin_advertiser',
-        '--distpath', './advertiser'
+        '--distpath', './advertiser',
+        '--add-data', 'd3plugin.json;.'
     ]) 
