@@ -6,7 +6,7 @@ This plugin allows you to subscribe to the LiveUpdate WebSocket endpoint and hav
 
 ## User Instructions (Windows)
 
-1.  Go to the [Releases page](https://github.com/disguise/grafana-liveupdate/releases) of this repository.
+1.  Go to the [Releases page](https://github.com/disguise-one/grafana-liveupdate/releases) of this repository.
 2.  Download the `disguiseone-liveupdate-datasource-vX.X.X.zip` file from the latest release.
 3.  Unzip the package.
 4.  Double-click the `start-grafana.bat` file. This will start the advertiser service and the Docker containers.
